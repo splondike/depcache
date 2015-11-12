@@ -11,56 +11,65 @@ import FileFinder (listAllFiles)
 import DepProcessors (processors)
 
 processDirectory :: FilePath -> IO ()
-processDirectory targetDir = do
-   files <- getFiles targetDir
-   depProcessors <- mapM (buildProcessors files) processors
+processDirectory targetRepo = do
+   repoContents <- getFilesInRepo targetRepo
+   depDownloaders <- mapM (buildProcessors repoContents) processors
 
-   forM_ depProcessors printDefinitionCount
-
+   forM_ depDownloaders printDownloaderCount
    putStrLn ""
 
    resultsChan <- newChan
+   executeDownloaders depDownloaders resultsChan
+   let totalExpectedResults = foldl (\c  (_, xs) -> c + (length xs)) 0 depDownloaders
+   results <- accumulateResults resultsChan totalExpectedResults
 
-   -- Update each definition type concurrently (for speed). For each of the definitions within
-   -- a given type update sequentially (the update command may not be thread safe)
-   -- Accumulate the results in resultsChan
-   forM_ depProcessors $ \(name, processors) -> forkIO $ do
-      forM_ processors $ \(filepath, installer) -> do
-         result <- installer
-         writeChan resultsChan (filepath, result)
+   printSummary results
 
-   -- Print out the reults as they come in
-   let installerCount = foldl (\c  (_, xs) -> c + (length xs)) 0 depProcessors
-   results <- forM [1..installerCount] $ \_ -> do
+   return ()
+
+printSummary results = putStrLn summary
+   where
+      summary = concat [
+                  "Processed " ++ (show totalResults) ++ " files, ",
+                  (show successCount) ++ " " ++ (wereWas successCount) ++ " successful and ",
+                  (show failureCount) ++ " " ++ (wereWas failureCount) ++ " not."
+                ]
+      totalResults = length results
+      failureCount = length $ filter isLeft results
+      successCount = totalResults - failureCount
+      wereWas count = if count == 1 then "was" else "were"
+
+
+accumulateResults resultsChan downloaderCount = 
+   forM [1..downloaderCount] $ \_ -> do
       (filepath, result) <- readChan resultsChan
+      -- Print out the reults as they come in
       case result of
            Left err -> putStrLn $ "Error processing: " ++ filepath ++ "\n\n" ++ err
            Right _ -> putStrLn $ "Processed: " ++ filepath
       return result
 
-   -- Print the final result tally
-   let failureCount = length $ filter isLeft results
-   let successCount = (length results) - failureCount
-   let wereWas count = if count == 1 then "was" else "were"
-   putStrLn $ concat [
-               "Processed " ++ (show installerCount) ++ " files, ",
-               (show successCount) ++ " " ++ (wereWas successCount) ++ " successful and ",
-               (show failureCount) ++ " " ++ (wereWas failureCount) ++ " not."]
-   
-   return ()
+-- | Update each definition type concurrently (for speed). For each of the definitions within
+-- a given type update sequentially (the update command may not be thread safe)
+-- Accumulate the results in resultsChan
+executeDownloaders depDownloaders resultsChan = 
+   forM_ depDownloaders $ \(_, downloaders) -> forkIO $
+      forM_ downloaders $ \(filepath, downloader) -> do
+         result <- downloader
+         writeChan resultsChan (filepath, result)
 
-printDefinitionCount (name, processors) = do
+printDownloaderCount (downloaderType, processors) = do
       let numDefs = (show $ (length processors))
           pluralized = if numDefs == "1" then " definition." else " definitions."
-      putStrLn $ "Found " ++ numDefs ++ " " ++ name ++ pluralized
+      putStrLn $ "Found " ++ numDefs ++ " " ++ downloaderType ++ pluralized
 
--- | Builds a (name, proccessingResult) pair. processingResult is evaluated
+-- | Builds a (downloaderType, proccessingResult) pair. processingResult is evaluated
 -- later (downloading doesn't happen as part of this function).
-buildProcessors files (name, builder) = do
+buildProcessors files (downloaderType, builder) = do
    fileProcessors <- builder files
-   return (name, fileProcessors)
+   return (downloaderType, fileProcessors)
 
-getFiles targetDir = do
+getFilesInRepo targetDir = do
    maybeFiles <- listAllFiles targetDir
    case maybeFiles of
         Just files -> return files

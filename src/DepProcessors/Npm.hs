@@ -5,7 +5,7 @@ module DepProcessors.Npm (
    NpmDefinition
 ) where
 
-import DepProcessors.FileHelpers
+import DepProcessors.ProcessorHelpers (getDirName, getFileName, executeInDirectory)
 
 findDefinitions :: [FilePath] -> IO [NpmDefinition]
 findDefinitions files = return $ map NpmDefinition filtered

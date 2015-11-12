@@ -20,7 +20,7 @@ executable depcache
                        DepProcessors.Bower,
                        DepProcessors.Composer,
                        DepProcessors.Npm,
-                       DepProcessors.FileHelpers,
+                       DepProcessors.ProcessorHelpers,
                        FileFinder,
                        FileFinder.Git,
                        Program

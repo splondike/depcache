@@ -5,7 +5,7 @@ module DepProcessors.Composer (
    ComposerDefinition
 ) where
 
-import DepProcessors.FileHelpers
+import DepProcessors.ProcessorHelpers (getDirName, getFileName, executeInDirectory)
 
 findDefinitions :: [FilePath] -> IO [ComposerDefinition]
 findDefinitions files = return $ map ComposerDefinition filtered

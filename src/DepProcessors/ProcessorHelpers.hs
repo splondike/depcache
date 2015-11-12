@@ -1,4 +1,4 @@
-module DepProcessors.FileHelpers (
+module DepProcessors.ProcessorHelpers (
    getFileName,
    getDirName,
    executeInDirectory

@@ -5,7 +5,7 @@ module DepProcessors.Bower (
    BowerDefinition
 ) where
 
-import DepProcessors.FileHelpers
+import DepProcessors.ProcessorHelpers (getDirName, getFileName, executeInDirectory)
 
 findDefinitions :: [FilePath] -> IO [BowerDefinition]
 findDefinitions files = return $ map BowerDefinition filtered

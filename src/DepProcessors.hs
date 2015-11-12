@@ -13,6 +13,6 @@ processors = [
       ("composer", builder Composer.findDefinitions Composer.installFromDefinition Composer.extractFilePath)
    ]
    where
-      builder defnFinder installer extractor files = do
+      builder defnFinder downloader defFilePath files = do
          defs <- defnFinder files
-         return $ map (\def -> (extractor def, installer def)) defs
+         return $ map (\def -> (defFilePath def, downloader def)) defs
