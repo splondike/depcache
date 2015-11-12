@@ -1,0 +1,36 @@
+name:                depcache
+version:             0.1.0.0
+synopsis:            A CLI tool for downloading bower, composer, npm etc. deps
+description:         Please see README.md
+homepage:            http://github.com/splondike/depcache#readme
+license:             GPL3
+license-file:        LICENSE
+author:              Stefan Schneider-Kennedy
+maintainer:          code@stefansk.name
+copyright:           2015 Stefan Schneider-Kennedy
+category:            Utils
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable depcache
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       
+                       DepProcessors,
+                       DepProcessors.Bower,
+                       DepProcessors.Composer,
+                       DepProcessors.Npm,
+                       DepProcessors.FileHelpers,
+                       FileFinder,
+                       FileFinder.Git,
+                       Program
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5,
+                       directory,
+                       process,
+                       unix,
+                       mtl,
+                       transformers,
+                       bytestring,
+                       text,
+                       aeson
