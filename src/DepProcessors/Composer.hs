@@ -5,18 +5,22 @@ module DepProcessors.Composer (
    ComposerDefinition
 ) where
 
-import DepProcessors.ProcessorHelpers (getDirName, getFileName, executeInDirectory)
+import qualified DepProcessors.Data.Result as R
+import DepProcessors.ProcessorHelpers (getFileName, executeGenericProcessor, GenericProcessorConfig(..))
 
 findDefinitions :: [FilePath] -> IO [ComposerDefinition]
 findDefinitions files = return $ map ComposerDefinition filtered
    where
       filtered = filter ((=="composer.json") . getFileName) files
 
-installFromDefinition :: ComposerDefinition -> IO (Either String ())
-installFromDefinition (ComposerDefinition file) = executeInDirectory "composer" args dir
+installFromDefinition :: ComposerDefinition -> IO R.Result
+installFromDefinition (ComposerDefinition file) = executeGenericProcessor config file
    where
-      dir = getDirName file
-      args = ["install", "--ignore-platform-reqs"]
+      config = GenericProcessorConfig {
+         commandName = "composer",
+         commandArguments = ["install", "--ignore-platform-reqs"],
+         depNotFoundRegex = "The requested package ([^ ]+) could not be found in any version"
+      }
 
 extractFilePath :: ComposerDefinition -> FilePath
 extractFilePath (ComposerDefinition fp) = fp

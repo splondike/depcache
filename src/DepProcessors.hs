@@ -1,10 +1,11 @@
 module DepProcessors where
 
+import qualified DepProcessors.Data.Result as R
 import qualified DepProcessors.Npm as Npm
 import qualified DepProcessors.Bower as Bower
 import qualified DepProcessors.Composer as Composer
 
-type Downloader = (FilePath, IO (Either String ()))
+type Downloader = (FilePath, IO R.Result)
 
 processors :: [(String, [FilePath] -> IO [Downloader])]
 processors = [
