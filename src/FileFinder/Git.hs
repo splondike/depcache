@@ -22,7 +22,7 @@ listAllFiles repoRoot = checkPathValid repoRoot getFiles
 -- | Is the given root directory suitable for processing by listAllFiles?
 isProcessable :: FilePath -> IO Bool
 isProcessable repoRoot = do
-   let gitDir = repoRoot ++ ".git/"
+   let gitDir = if (== '/') . head . reverse $ repoRoot then repoRoot ++ ".git/" else repoRoot ++ "/.git/"
    SPF.fileExist gitDir
    where
       normalizedRoot = normalizeDirectory repoRoot
